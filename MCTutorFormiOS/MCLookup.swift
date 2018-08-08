@@ -158,7 +158,7 @@ extension SQLiteDatabase {
      
      @param courseInfo the course information from the CourseInfo table to be inserted into the CourseInfo Table
      */
-    func insertCourseInfo(courseInfo: CourseInfo) throws {
+    public func insertCourseInfo(courseInfo: CourseInfo) throws {
         let insertSql = """
         INSERT INTO CourseInfo (section, course)
         VALUES (?, ?);
@@ -202,7 +202,7 @@ extension SQLiteDatabase {
      
      @param course the course to inserted into the Course table
      */
-    func insertCourse(course: Course) throws {
+    public func insertCourse(course: Course) throws {
         let insertSql = """
         INSERT INTO Course (stuID, section, profName, mcCampus)
         VALUES (?, ?, ?, ?);
@@ -245,7 +245,7 @@ extension SQLiteDatabase {
      
      @param student the student to inserted into the Student table
      */
-    func insertStudent(student: Student) throws {
+    public func insertStudent(student: Student) throws {
         let insertSql = """
         INSERT INTO Student (stuID, stuFName, stuLName)
         VALUES (?, ?, ?);
@@ -275,6 +275,41 @@ extension SQLiteDatabase {
         
         if DEBUG_MODE {
             print("Successfully inserted student.")
+        }
+    }
+    
+    /**
+     Insert tutor into the database. Tutor table has the following fields:
+     tutorID INTEGER PRIMARY KEY AUTOINCREMENT,
+     tutorName CHAR(255)
+     
+     @param tutor the tutor to inserted into the Tutor table
+     */
+    public func insertTutor(tutor: Tutor) throws {
+        let insertSql = """
+        INSERT INTO Tutor (tutorName)
+        VALUES (?);
+        """
+        
+        let insertStatement = try prepareStatement(sql: insertSql)
+        
+        defer {
+            sqlite3_finalize(insertStatement)
+        }
+        
+        let tutorName: NSString = tutor.tutorName
+        let isSqliteOK = sqlite3_bind_text(insertStatement, 1, tutorName.utf8String, -1, nil) == SQLITE_OK
+        
+        guard isSqliteOK else {
+            throw SQLiteError.Bind(message: errorMessage)
+        }
+        
+        guard sqlite3_step(insertStatement) == SQLITE_DONE else {
+            throw SQLiteError.Step(message: errorMessage)
+        }
+        
+        if DEBUG_MODE {
+            print("Successfully inserted tutor.")
         }
     }
 }
@@ -434,6 +469,25 @@ extension Course: SQLTable {
     // NB: add dropStatement here if desired ability to drop table (must be added in protocol SQLTable first)
 }
 // End Course Table
+
+// Begin Tutor Table
+struct Tutor {
+    let tutorName: NSString
+}
+
+extension Tutor: SQLTable {
+    static var createStatement: String {
+        return """
+        CREATE TABLE Tutor(
+        tutorID INTEGER PRIMARY KEY AUTOINCREMENT,
+        tutorName CHAR(255)
+        );
+        """
+    }
+    
+    // NB: add dropStatement here if desired ability to drop table (must be added in protocol SQLTable first)
+}
+// End Tutor Table
 
 // Struct for obtaining all returned key data from generalized query
 struct KeyData {
@@ -639,6 +693,7 @@ class MCLookup {
             try m_db.createTable(table: Student.self)
             try m_db.createTable(table: CourseInfo.self)
             try m_db.createTable(table: Course.self)
+            try m_db.createTable(table: Tutor.self)
         } catch {
             print(m_db.errorMessage)
         }

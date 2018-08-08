@@ -26,7 +26,7 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
     @IBOutlet weak var studentIDTextField: UITextField!
     @IBOutlet weak var addTutorTextField: UITextField!
     
-    private var m_path: String?
+    private var m_csvPath: String?
     private var m_mcLookup: MCLookup?
     private var m_queryResults: [KeyData] = []
     
@@ -77,11 +77,11 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
         studentIDTextField.keyboardType = UIKeyboardType.asciiCapableNumberPad
         studentIDTextField.keyboardType = UIKeyboardType.numbersAndPunctuation
         
-        m_path = Bundle.main.path(forResource: TARGET_CSV_NAME, ofType: "txt") ?? ""
+        m_csvPath = Bundle.main.path(forResource: TARGET_CSV_NAME, ofType: "txt") ?? ""
         
         addTutorTextField.isHidden = true;
         
-        readTutorData(path: TUTORS_PATH)
+//        readTutorData(path: TUTORS_PATH)
     }
     
     func getDocumentsDirectory() -> URL {
@@ -256,9 +256,9 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
      NB: The file path is for the CSV data, not the database path
      */
     public func initializeDB() {
-        if !(m_path?.isEmpty)! {
+        if !(m_csvPath?.isEmpty)! {
             do {
-                m_mcLookup = try MCLookup(file: m_path!)
+                m_mcLookup = try MCLookup(file: m_csvPath!)
                 try m_mcLookup?.initDatabase()
             } catch {
                 print("Database request failed")
@@ -268,9 +268,9 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
     
     //MARK: Data import/querying
     func readData(studentID: String) -> [KeyData] {
-        if !(m_path?.isEmpty)! {
+        if !(m_csvPath?.isEmpty)! {
             do {
-                let mcLookup = try MCLookup(file: m_path!)
+                let mcLookup = try MCLookup(file: m_csvPath!)
                 
                 // Return results
                 return mcLookup.getKeyDataByStudentID(id: studentID)
