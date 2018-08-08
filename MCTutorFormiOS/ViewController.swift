@@ -82,6 +82,8 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
         addTutorTextField.isHidden = true;
         
 //        readTutorData(path: TUTORS_PATH)
+        
+//        initializeDB()
     }
     
     func getDocumentsDirectory() -> URL {
@@ -177,9 +179,20 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
             addTutorTextField.isHidden = false
         }
         if(!((addTutorTextField.text?.isEmpty)!)){
-            print("Call write function")
-            writeToFile(value: addTutorTextField.text!)
+//            print("Call write function")
+//            writeToFile(value: addTutorTextField.text!)
            // tutors.append(addTutorTextField.text!)
+            
+            if !(m_csvPath?.isEmpty)! {
+                do {
+                    let mcLookup = try MCLookup(file: m_csvPath!)
+                    try mcLookup.getDB().insertTutor(tutor: Tutor(tutorName: addTutorTextField.text! as NSString))
+                } catch {
+                    print("Database request failed")
+                }
+            } else {
+                print("Path was not set for CSV data")
+            }
         }
     }
     
@@ -250,7 +263,6 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
         }
     }
     
-    
     /**
      Initialize the database when necessary
      NB: The file path is for the CSV data, not the database path
@@ -258,11 +270,17 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
     public func initializeDB() {
         if !(m_csvPath?.isEmpty)! {
             do {
-                m_mcLookup = try MCLookup(file: m_csvPath!)
-                try m_mcLookup?.initDatabase()
+                let initTimer = ParkBenchTimer()
+                let mcLookup = try MCLookup(file: m_csvPath!)
+                
+                print("Initializing database...")
+                try mcLookup.initDatabase()
+                print("Done. Database initialization took \(initTimer.stop()) seconds.")
             } catch {
-                print("Database request failed")
+                print("Database Initialization Error: Database request failed")
             }
+        } else {
+            print("Database Initialization Error: Path was not set for CSV data")
         }
     }
     
