@@ -531,7 +531,7 @@ class MCLookup {
             
             let decoded: Data = key as! Data
             
-            print("Decoded data: \(decoded)")
+            print("Decoded database data: \(decoded)")
             
             let decodedItems = NSKeyedUnarchiver.unarchiveObject(with: decoded) as! SQLiteDatabase
             

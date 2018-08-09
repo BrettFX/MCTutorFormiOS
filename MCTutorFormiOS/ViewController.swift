@@ -117,7 +117,7 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
             
             let decoded: Data = key as! Data
             
-            print("Decoded data: \(decoded)")
+            print("Decoded tutor data: \(decoded)")
             
             let decodedItems = NSKeyedUnarchiver.unarchiveObject(with: decoded) as! NSMutableSet
             
