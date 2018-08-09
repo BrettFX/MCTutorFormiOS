@@ -86,13 +86,15 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
         m_csvPath = Bundle.main.path(forResource: TARGET_CSV_NAME, ofType: "txt") ?? ""
         
         addTutorTextField.isHidden = true;
+        
+        let loadingDialog = getLoadingDialog(message: "Loading database, please wait...\n\n")
     }
     
     /**
      Save the tutors from the tutors mutable set (hash set) to the UserDefaults tutors file
      */
     private func saveTutors() {
-        print("Saving...")
+        print("Saving tutors...")
         
         let encodedData: Data = NSKeyedArchiver.archivedData(withRootObject: m_tutorsSet ?? NSMutableSet())
         m_tutorsFile.set(encodedData, forKey: UserDefaultsManager.TUTORS_KEY)
@@ -218,6 +220,22 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
         alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.default,handler: nil))
         
         self.present(alertController, animated: true, completion: nil)
+    }
+    
+    private func getLoadingDialog(message: String) -> UIAlertController{
+        let alertController = UIAlertController(title: nil, message: message, preferredStyle: UIAlertControllerStyle.alert)
+        
+        let spinnerIndicator: UIActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.whiteLarge)
+        
+        spinnerIndicator.center = CGPoint(x: 135.0, y: 90)
+        spinnerIndicator.color = UIColor.black
+        spinnerIndicator.startAnimating()
+        
+        alertController.view.addSubview(spinnerIndicator)
+        
+        self.present(alertController, animated: true, completion: nil)
+        
+        return alertController
     }
     
     @IBAction func addTutorAction(_ sender: UIButton) {

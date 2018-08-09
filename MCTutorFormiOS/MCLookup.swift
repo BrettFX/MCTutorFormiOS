@@ -458,6 +458,7 @@ class MCLookup {
     public let TARGET_DB = Bundle.main.path(forResource: DATABASE_NAME, ofType: "sqlite")!
     
     private var m_db: SQLiteDatabase
+    private var m_databaseFile: UserDefaults = UserDefaults.standard
     
     // Will iterate over the keys for each line delimited by CRLF or LF
     private var m_keys: [String] = []
@@ -476,14 +477,9 @@ class MCLookup {
         formatter.dateFormat = "MM/dd/yyyy"
         m_currentDate = formatter.string(from: date)
         
-        // Attempt to connect to specified database
-        do {
-            m_db = try SQLiteDatabase.open(path: TARGET_DB)
-            print("Successfully opened connection to database.")
-        } catch SQLiteError.OpenDatabase( _) {
-            print("Unable to open database. Verify that you created the directory described in the Getting Started section.")
-            m_db = SQLiteDatabase(dbPointer: nil)
-        }
+        // Initialize database and load any data into it
+        m_db = SQLiteDatabase(dbPointer: nil)
+        try loadDB()
     }
     
     /**
@@ -506,6 +502,70 @@ class MCLookup {
         
         // Read csv and load data into database
         readCSV(file: m_csvFile)
+        
+        // Save database file to user defaults
+        saveDB()
+    }
+    
+    /**
+     Save current state of database to user defaults such that it can be loaded
+     during another session if any changes are made durring the current session
+     */
+    private func saveDB() {
+        print("Saving database...")
+        
+        let encodedData: Data = NSKeyedArchiver.archivedData(withRootObject: m_db)
+        m_databaseFile.set(encodedData, forKey: UserDefaultsManager.DATABASE_KEY)
+        m_databaseFile.synchronize()
+        
+        print("Save Successful.")
+    }
+    
+    /**
+     Load a saved database from user defaults. If no database exists then intialize the database
+     */
+    private func loadDB() throws {
+        print("Loading database...")
+        
+        if let key = m_databaseFile.object(forKey: UserDefaultsManager.DATABASE_KEY){
+            
+            let decoded: Data = key as! Data
+            
+            print("Decoded data: \(decoded)")
+            
+            let decodedItems = NSKeyedUnarchiver.unarchiveObject(with: decoded) as! SQLiteDatabase
+            
+            m_db = decodedItems
+            
+            if(m_db.dbPointer != nil){
+                print("Successfully loaded database.")
+            }else{
+                print("No database to load.")
+                
+                // Attempt to connect to specified database
+                do {
+                    m_db = try SQLiteDatabase.open(path: TARGET_DB)
+                    print("Successfully opened connection to database.")
+                } catch SQLiteError.OpenDatabase( _) {
+                    print("Unable to open database. Verify that you created the directory described in the Getting Started section.")
+                    m_db = SQLiteDatabase(dbPointer: nil)
+                }
+            }
+            
+        }else{
+            print("No database to load.")
+            
+            // Attempt to connect to specified database
+            do {
+                m_db = try SQLiteDatabase.open(path: TARGET_DB)
+                print("Successfully opened connection to database.")
+            } catch SQLiteError.OpenDatabase( _) {
+                print("Unable to open database. Verify that you created the directory described in the Getting Started section.")
+                m_db = SQLiteDatabase(dbPointer: nil)
+            }
+        }
+        
+        print("Loading complete.")
     }
     
     /**

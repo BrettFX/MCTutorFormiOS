@@ -10,6 +10,7 @@ import Foundation
 
 class UserDefaultsManager {
     public static let TUTORS_KEY: String = "tutors_list"
+    public static let DATABASE_KEY: String = "mc_database"
     
     public static func initializeUserDefaults(datFile: UserDefaults, datFileKey: String) -> Void{
         datFile.removeObject(forKey: datFileKey)
