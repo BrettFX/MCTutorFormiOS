@@ -87,7 +87,11 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
         
         addTutorTextField.isHidden = true;
         
-        let loadingDialog = getLoadingDialog(message: "Loading database, please wait...\n\n")
+        // Attempt to load in database from previous session
+        if !loadDB() {
+            print("Loading failed...")
+            let loadingDialog = getLoadingDialog(message: "Loading database, please wait...\n\n")
+        }
     }
     
     /**
@@ -344,6 +348,21 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
         } else {
             print("Database Initialization Error: Path was not set for CSV data")
         }
+    }
+    
+    func loadDB() -> Bool{
+        if !(m_csvPath?.isEmpty)! {
+            do {
+                m_mcLookup = try MCLookup(file: m_csvPath!)
+                return true
+            } catch {
+                print("Database request failed")
+            }
+        } else {
+            print("Path was not set for CSV data")
+        }
+        
+        return false
     }
     
     //MARK: Data import/querying
