@@ -455,7 +455,7 @@ class MCLookup {
     private let PROF_NAME = "professor_name"
     private let CAMPUS_CODE = "campus_code"
     
-    public let TARGET_DB = Bundle.main.path(forResource: DATABASE_NAME, ofType: "sqlite")!
+//    public let TARGET_DB = Bundle.main.path(forResource: DATABASE_NAME, ofType: "sqlite")!
     
     private var m_db: SQLiteDatabase
     private var m_databaseFile: UserDefaults = UserDefaults.standard
@@ -466,6 +466,8 @@ class MCLookup {
     private var m_currentDate: String = ""
     
     private var m_csvFile: String = ""
+    
+    private var m_databaseLoaded: Bool = false
     
     init(file: String) throws {
         m_keys = [STUDENT_ID, COURSE, SECTION, STUDENT_FNAME, STUDENT_LNAME, PROF_NAME, CAMPUS_CODE]
@@ -486,25 +488,29 @@ class MCLookup {
      Initialize the database either when the database has become corrupted or does not exist
      */
     public func initDatabase() throws {
-        // Initialize database
-        SQLiteDatabase.destroyDatabase(path: TARGET_DB)
-        
-        // Attempt to connect to specified database
-        do {
-            m_db = try SQLiteDatabase.open(path: TARGET_DB)
-            print("Successfully opened connection to database.")
-        } catch SQLiteError.OpenDatabase( _) {
-            print("Unable to open database. Verify that you created the directory described in the Getting Started section.")
+        if let targetDB = Bundle.main.path(forResource: DATABASE_NAME, ofType: "sqlite") {
+            // Initialize database
+            SQLiteDatabase.destroyDatabase(path: targetDB)
+            
+            // Attempt to connect to specified database
+            do {
+                m_db = try SQLiteDatabase.open(path: targetDB)
+                print("Successfully opened connection to database.")
+            } catch SQLiteError.OpenDatabase( _) {
+                print("Unable to open database. Verify that you created the directory described in the Getting Started section.")
+            }
+            
+            // Create the Student, CourseInfo, and Course tables
+            try createDatabaseTables()
+            
+            // Read csv and load data into database
+            readCSV(file: m_csvFile)
+            
+            // Save database file to user defaults
+            saveDB()
+        } else {
+            print("Error initializing database: Bundle.main.path resource for \(DATABASE_NAME).sqlite could not be resolved")
         }
-        
-        // Create the Student, CourseInfo, and Course tables
-        try createDatabaseTables()
-        
-        // Read csv and load data into database
-        readCSV(file: m_csvFile)
-        
-        // Save database file to user defaults
-        saveDB()
     }
     
     /**
@@ -539,6 +545,7 @@ class MCLookup {
             
             if(m_db.dbPointer != nil){
                 print("Successfully loaded database.")
+                m_databaseLoaded = true
             }else{
                 print("No database to load.")
             }
@@ -548,6 +555,13 @@ class MCLookup {
         }
         
         print("Loading complete.")
+    }
+    
+    /**
+     Determine if the database has been loaded to determine the necessary course of action
+     */
+    public func isDatabaseLoaded() -> Bool {
+        return m_databaseLoaded
     }
     
     /**
